@@ -8,6 +8,7 @@ type Pokemon = {
   name: string
   types: { name: string }[]
   image: string
+  discription?: string;
 }
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
@@ -18,7 +19,11 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const { id, name, sprites } = response.data
 
   const species = await axios.get(`https://pokeapi.co/api/v2/pokemon-species/${id}`)
-
+  const discriptionEntry = species.data.flavor_text_entries.find(
+    (entry: { language: { name: string } }) => 
+      entry.language.name === "ko"
+  )
+  const discription = discriptionEntry ? discriptionEntry.flavor_text : undefined
   const koreanName = species.data.names.find(
     (item: { language: { name: string } }) => 
       item.language.name === "ko"
@@ -29,6 +34,7 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
     name: koreanName || name,
     types: response.data.types,
     image: sprites.other["official-artwork"].front_default,
+    discription,
   }
 }
 
@@ -49,6 +55,9 @@ export default function Detail() {
         <span className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full">
           No. {pokemon.id}
         </span>
+        {pokemon.discription && (
+          <p className="text-sm text-slate-600">{pokemon.discription}</p>
+        )}
       </div>
     </div>
   )
